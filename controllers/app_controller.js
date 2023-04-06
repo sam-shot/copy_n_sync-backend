@@ -22,8 +22,8 @@ export async function register(req,res){
         if (existingUser.length > 0) {
           return res.status(409).json({ message: 'User already exists' });
         }
-            bcrypt.hash(password, 20).then(hashPass =>{
-                const user = new user_model({ name, email, hashPass, username });
+            bcrypt.hash(password, 10).then(hashPass =>{
+                const user = new user_model({ name, email, password:hashPass, username });
                 user.save().then(
                     result=>{
                         res.status(200).send({
