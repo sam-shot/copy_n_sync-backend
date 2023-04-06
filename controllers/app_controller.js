@@ -33,7 +33,8 @@ export async function register(req,res){
                                 "email" : email,
                                 "username" : username,
                                 "password" : hashPass
-                            }
+                            },
+                            status: "200"
                         });
                     }
                 ).catch(error => {
