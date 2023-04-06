@@ -20,7 +20,8 @@ export async function register(req,res){
     
         const existingUser = await user_model.find({$or:[{ email}, { username }]});
         if (existingUser.length > 0) {
-          return res.status(409).json({ message: 'User already exists' });
+          return res.status(409).json({ message: 'User already exists',
+        status: "409"});
         }
             bcrypt.hash(password, 10).then(hashPass =>{
                 const user = new user_model({ name, email, password:hashPass, username });
@@ -38,11 +39,15 @@ export async function register(req,res){
                         });
                     }
                 ).catch(error => {
-                    res.status(500).send({error});
+                    res.status(500).send({
+                        message: error,
+                        status: "500"
+                    });
                 });
             }).catch(error => {
-                res.status(200).send({
-                    message: "Unable to Hash Password"
+                res.status(403).send({
+                    message: "Unable to Hash Password",
+                    status: "403"
                 });
             });
         
