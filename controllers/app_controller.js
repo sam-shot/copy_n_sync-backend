@@ -174,7 +174,7 @@ export async function getLatestText(req, res) {
           })
           .catch((error) => {
             return res.status(404).send({
-              message: error,
+              message: "No Texts yet!",
               status: "404",
             });
           });
@@ -187,7 +187,7 @@ export async function getLatestText(req, res) {
       });
   } catch (error) {
     return res.status(500).send({
-      message: "No Texts yet",
+      message: "Server Error",
       status: "500",
     });
   }
