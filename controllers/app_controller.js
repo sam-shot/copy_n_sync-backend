@@ -23,6 +23,7 @@ export async function login(req, res) {
               email: user.email,
               username: user.username,
               name: user.name,
+              id: user._id,
             },
             status: "200",
           });
@@ -152,7 +153,7 @@ export async function sendText(req, res) {
 }
 
 export async function getLatestText(req, res) {
-  const { id } = req.body;
+  const { id } = req.query;
 
   try {
     user_model
@@ -193,7 +194,7 @@ export async function getLatestText(req, res) {
 }
 
 export async function getTexts(req, res) {
-  const { id } = req.body;
+  const { id } = req.query;
 
   var textList;
   await user_model
