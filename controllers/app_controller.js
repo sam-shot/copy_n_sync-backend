@@ -187,7 +187,7 @@ export async function getLatestText(req, res) {
       });
   } catch (error) {
     return res.status(500).send({
-      message: error,
+      message: "No Texts yet",
       status: "500",
     });
   }
