@@ -26,6 +26,10 @@ try {
       });
 }
 }).catch(error =>{
-    console.log("Invalid DB connection");
-});;
+    console.log("Invalid DB connection", error);
+});
+
+// app.listen(port, function() {
+//     console.log('Server listening at port', port);
+//   });
 
