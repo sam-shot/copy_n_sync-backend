@@ -110,9 +110,9 @@ export async function sendText(req, res) {
     .then((userExists) => {
       if (!userExists) {
         return res.status(404).send({
-            message: "User does not exist",
-            status: "404"
-          })
+          message: "User does not exist",
+          status: "404",
+        });
       } else {
         newText
           .save()
@@ -146,8 +146,8 @@ export async function sendText(req, res) {
     .catch((err) => {
       return res.status(503).send({
         message: "Id number in Incorrect format ",
-        status: "503"
-      })
+        status: "503",
+      });
     });
 }
 
@@ -194,22 +194,46 @@ export async function getLatestText(req, res) {
 
 export async function getTexts(req, res) {
   const { id } = req.body;
-  user_model.findById(id).then((result) => {
-    if (!result)
-      return res.status(404).send({
-        message: "Cant Find User",
-        status: "404",
+
+  var textList;
+  await user_model
+    .findById(id)
+    .then(async (result) => {
+      if (!result) {
+        textList = "nouser";
+        return res.status(404).send({
+          message: "Cant Find User",
+          status: "404",
+        });
+      }
+      const promises = result.texts.map((textId) => {
+        return text_model.findById(textId).then((response) => {
+          return response.text;
+        });
       });
-    var i = 0;
-    var textList = [];
-    for (i; i < result.texts.length; i++) {
-      text_model.findById(result.texts[i]).then((response) => {
-        const latestText = response.text;
-        console.log(latestText);
-        textList.push(latestText)
+      textList = await Promise.all(promises);
+    })
+    .catch((err) => {
+      res.status(503).send({
+        message: "Invalid id number",
+        status: "500",
       });
-    }
-    console.log(textList)
-    // console.log(result);
-  });
+      textList = null;
+    });
+
+  if (Array.isArray(textList) && textList.length === 0) {
+    return res.status(200).send({
+      message: "No texts yet",
+      data: textList,
+      status: "200",
+    });
+  } else if (textList === null) {
+  } else if (textList === "nouser") {
+  } else {
+    return res.status(202).send({
+      message: "Texts Retrieved Successfully",
+      data: textList,
+      status: "202",
+    });
+  }
 }
