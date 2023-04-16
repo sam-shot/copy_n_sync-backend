@@ -4,14 +4,21 @@ import connect from "./db/conn.js";
 import http from "http";
 import { Server } from "socket.io";
 import cors from "cors";
+import { instrument } from "@socket.io/admin-ui";
 
 const app = express();
+app.use(cors());
+
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+  cors: {
+    origin: ["https://admin.socket.io/", "http://localhost:5555/"],
+    methods: ["GET", "POST"],
+  },
+});
 
 const connectedUsers = {};
 
-app.use(cors());
 io.on("connection", (socket) => {
   const userId = socket.handshake.query.userId;
   console.log(`User`, socket.id, ` connected with id: ${userId}`);
@@ -45,6 +52,7 @@ io.on("connection", (socket) => {
     console.log(otherClients);
 
     if (connectedUsers[userId].length < 2) {
+      io.to(connectedUsers[userId]).emit("error", "You need to have at least 2 devices for Text Syncing");
       console.log(`User ${userId} does not have at least 2 clients connected`);
     } else {
       io.to(otherClients).emit("get", data.message);
@@ -52,7 +60,8 @@ io.on("connection", (socket) => {
     console.log(data.userId);
   });
 });
- 
+instrument(io, { auth: false });
+
 app.use(express.json());
 const port = 3000;
 
