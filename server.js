@@ -1,10 +1,10 @@
+import { instrument } from "@socket.io/admin-ui";
+import cors from "cors";
 import express from "express";
-import router from "./router/routes.js";
-import connect from "./db/conn.js";
 import http from "http";
 import { Server } from "socket.io";
-import cors from "cors";
-import { instrument } from "@socket.io/admin-ui";
+import connect from "./db/conn.js";
+import router from "./router/routes.js";
 
 const app = express();
 app.use(cors());
@@ -55,7 +55,24 @@ io.on("connection", (socket) => {
       io.to(connectedUsers[userId]).emit("error", "You need to have at least 2 devices for Text Syncing");
       console.log(`User ${userId} does not have at least 2 clients connected`);
     } else {
+
+
       io.to(otherClients).emit("get", data.message);
+      const newText = new text_model({
+        text: data.message,
+        user: data.id,
+      });
+
+      newText
+      .save()
+      .then((result) => {
+        user_model
+          .findByIdAndUpdate(
+            id,
+            { $push: { texts: result._id } },
+            { new: true }
+          )})
+
     }
     console.log(data.userId);
   });
