@@ -73,7 +73,9 @@ io.on("connection", (socket) => {
             id,
             { $push: { texts: result._id } },
             { new: true }
-          )})
+          )}).catch((err) => {
+            console.log(err);
+          });
 
       
 
