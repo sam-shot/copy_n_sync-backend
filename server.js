@@ -5,6 +5,8 @@ import http from "http";
 import { Server } from "socket.io";
 import connect from "./db/conn.js";
 import router from "./router/routes.js";
+import user_model from "./model/user_model.js";
+import text_model from "./model/text_model.js";
 
 const app = express();
 app.use(cors());
@@ -72,6 +74,8 @@ io.on("connection", (socket) => {
             { $push: { texts: result._id } },
             { new: true }
           )})
+
+      
 
     }
     console.log(data.userId);
