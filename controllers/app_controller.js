@@ -1,7 +1,9 @@
-import user_model from "../model/user_model.js";
-import text_model from "../model/text_model.js";
 import bcrypt from "bcrypt";
-import { json } from "express";
+import text_model from "../model/text_model.js";
+import token_model from "../model/token_model.js";
+import user_model from "../model/user_model.js";
+import * as code_generator from "../utils/code_generator.js";
+import { sendMail } from "../utils/mailer.js";
 
 export async function login(req, res) {
   const { email, password } = req.body;
@@ -97,6 +99,149 @@ export async function register(req, res) {
         status: "403",
       });
     });
+}
+
+export async function forgotPassword(req, res) {
+  const { email } = req.body;
+
+  user_model
+    .findOne({ email })
+    .then(async (user) => {
+      if (!user) {
+        return res.status(404).send({
+          message: "User does not exist",
+          status: "404",
+        });
+      } else {
+        await token_model.deleteMany({ user: user._id });
+
+        const code = code_generator.generateCode(5);
+        const verify_token = new token_model({
+          token: code,
+          user: user._id,
+        });
+
+        await verify_token.save();
+
+        sendMail({
+          from: "Copy n Sync",
+          email: email,
+          subject: "Forgot Password",
+          text: code,
+          html: "html",
+        });
+
+        return res.status(202).send({
+          message:
+            "A verification Code has been sent to your email, code expires in 5 minutes ",
+          status: "202",
+        });
+      }
+    })
+    .catch((error) => {
+      return res.status(500).send({ message: "Server Error", status: "500" });
+    });
+}
+
+export async function verifyToken(req, res) {
+  const { email, code } = req.body;
+
+  user_model
+    .findOne({ email })
+    .then((user) => {
+      if (!user) {
+        return res.status(404).send({
+          message: "User does not exist",
+          status: "404",
+        });
+      } else {
+        token_model
+          .findOne({
+            user: user._id,
+            token: code,
+          })
+          .then(async (userToken) => {
+            if (userToken) {
+              await token_model.findByIdAndDelete(userToken._id);
+              const hasExpired = code_generator.validateCode(
+                userToken.createdAt,
+                5
+              );
+              if (hasExpired) {
+                const token = code_generator.generateToken(user._id);
+                return res.status(200).send({
+                  message: "Verified",
+                  code: token,
+                  status: "200",
+                });
+              } else {
+                return res.status(400).send({
+                  message: "Code Expired",
+                  status: "400",
+                });
+              }
+            } else {
+              return res.status(404).send({
+                message: "Invalid Verification Code",
+                status: "404",
+              });
+            }
+          })
+          .catch((error) => {
+            return res.status(503).send({
+              message: `An Error ${error} Occured`,
+              status: "503",
+            });
+          });
+      }
+    })
+    .catch((error) => {
+      return res.status(500).send({ message: "Server Error", status: "500" });
+    });
+}
+
+export async function updatePassword(req, res) {
+  const { token, password } = req.body;
+
+  // const id =
+  const tokenResponse = code_generator.validateToken(token);
+  if (tokenResponse.exp) {
+    return res.status(400).send({
+      message: "Token Expired, Please restart the process",
+      status: "400",
+    });
+  } else {
+    bcrypt
+      .hash(password, 10)
+      .then((hashPass) => {
+        user_model
+          .findByIdAndUpdate(tokenResponse.id, { password: hashPass })
+          .then((newDetails) => {
+            if (!newDetails) {
+              return res.status(404).send({
+                message: "A Wrong Token Provided",
+                status: "404",
+              });
+            } else {
+              return res.status(200).send({
+                message: "Password Updated successfully",
+                status: "200",
+              });
+            }
+          })
+          .catch((e) => {
+            return res
+              .status(503)
+              .send({ message: "An Error Occured", status: "503" });
+          });
+      })
+      .catch((error) => {
+        res.status(403).send({
+          message: "Unable to Hash Password",
+          status: "403",
+        });
+      });
+  }
 }
 
 export async function sendText(req, res) {
@@ -209,7 +354,10 @@ export async function getTexts(req, res) {
       }
       const promises = result.texts.map((textId) => {
         return text_model.findById(textId).then((response) => {
-          return response.text;
+          return {
+            text: response.text,
+            time: response.createdAt.toLocaleString(undefined, { weekday: 'short',  month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true })
+          };
         });
       });
       textList = await Promise.all(promises);
@@ -237,4 +385,30 @@ export async function getTexts(req, res) {
       status: "202",
     });
   }
+}
+
+export async function getUserDetail(req, res) {
+  const {id} = req.query;
+
+  user_model.findById(id).then((userDetails)=>{
+    if(!userDetails) return res.status(404).send({
+      message: "Cant Find User",
+      status: "404",
+    });
+
+     return res.status(202).send({
+      message: "User details Retrieved Successfully",
+      data: {
+        email: userDetails.email,
+        username: userDetails.username,
+        name: userDetails.name,
+      },
+      status: "202",
+    });
+  }).catch((err) => {
+    res.status(404).send({
+      message: "User does not exist",
+      status: "404",
+    });
+  });
 }

@@ -4,6 +4,8 @@ import express from "express";
 import http from "http";
 import { Server } from "socket.io";
 import connect from "./db/conn.js";
+import text_model from "./model/text_model.js";
+import user_model from "./model/user_model.js";
 import router from "./router/routes.js";
 
 const app = express();
@@ -52,14 +54,44 @@ io.on("connection", (socket) => {
     console.log(otherClients);
 
     if (connectedUsers[userId].length < 2) {
-      io.to(connectedUsers[userId]).emit("error", "You need to have at least 2 devices for Text Syncing");
+      io.to(connectedUsers[userId]).emit(
+        "error",
+        "You need to have at least 2 devices for Text Syncing"
+      );
+      if(!data.fromHistory) {
+        const newText = new text_model({
+          text: data.message,
+          user: userId,
+        });
+        newText
+            .save()
+            .then(async(result) => {
+              console.log("user to update");
+              await user_model
+                .findByIdAndUpdate(
+                  userId,
+                  { $push: { texts: result._id } },
+                  { new: true }
+                )});
+      }
       console.log(`User ${userId} does not have at least 2 clients connected`);
     } else {
-
-
+      if(!data.fromHistory) {
+        const newText = new text_model({
+          text: data.message,
+          user: userId,
+        });
+        newText
+            .save()
+            .then((result) => {
+              user_model
+                .findByIdAndUpdate(
+                  userId,
+                  { $push: { texts: result._id } },
+                  { new: true }
+                )});
+      }
       io.to(otherClients).emit("get", data.message);
-      
-
     }
     console.log(data.userId);
   });
