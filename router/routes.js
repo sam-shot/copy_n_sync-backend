@@ -10,6 +10,9 @@ router.route('/auth/forgotpassword').post(controlller.forgotPassword);
 router.route('/auth/forgotpassword/verify').post(controlller.verifyToken);
 router.route('/auth/forgotpassword/updatePassword').post(controlller.updatePassword);
 
+
+router.route('/user/updateDeviceId').post(controlller.saveFirebaseId);
+
 router.route('/send/text').post(controlller.sendText);
 
 

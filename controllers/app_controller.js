@@ -4,6 +4,7 @@ import token_model from "../model/token_model.js";
 import user_model from "../model/user_model.js";
 import * as code_generator from "../utils/code_generator.js";
 import { sendMail } from "../utils/mailer.js";
+import axios from 'axios';
 
 export async function login(req, res) {
   const { email, password } = req.body;
@@ -46,7 +47,7 @@ export async function login(req, res) {
 }
 
 export async function register(req, res) {
-  const { name, email, password, username } = req.body;
+  const { name, email, password, username, firebaseId } = req.body;
 
   if (!name) return res.status(403).send({ message: "Please input a name" });
   if (!email) return res.status(403).send({ message: "Please input an email" });
@@ -54,6 +55,8 @@ export async function register(req, res) {
     return res.status(403).send({ message: "Please input a password" });
   if (!username)
     return res.status(403).send({ message: "Please input a username" });
+  if (!firebaseId)
+    return res.status(403).send({ message: "Please input a device id" });
 
   const existingUser = await user_model.find({
     $or: [{ email }, { username }],
@@ -71,6 +74,7 @@ export async function register(req, res) {
         email,
         password: hashPass,
         username,
+        devices: [firebaseId],
       });
       user
         .save()
@@ -244,35 +248,113 @@ export async function updatePassword(req, res) {
   }
 }
 
+export async function saveFirebaseId(req, res) {
+  const { userId, firebaseId, previousFirebaseId } = req.body;
+
+  if (previousFirebaseId == null) {
+    user_model
+      .findByIdAndUpdate(
+        userId,
+        { $push: { devices: firebaseId } },
+        { new: true }
+      )
+      .then((updatedUser) => {
+        return res.status(200).send({
+          message: "Devices registered successfully",
+          devices: updatedUser.devices,
+          status: "200",
+        });
+      })
+      .catch((err) => {
+        return res
+          .status(404)
+          .send({ message: "User not Found!", status: "404" });
+      });
+  } else {
+    await user_model
+      .findOneAndUpdate(
+        { _id: userId, devices: previousFirebaseId },
+        { $set: { "devices.$[oldId]": firebaseId } },
+        { arrayFilters: [{ oldId: previousFirebaseId }] },
+        { new: true }
+      )
+      .then((updatedUser) => {
+        return res.status(200).send({
+          message: "Devices registered successfully",
+          devices: updatedUser.devices,
+          status: "200",
+        });
+      })
+      .catch((err) => {
+        return res
+          .status(404)
+          .send({ message: "Device/ User not Found!", status: "404" });
+      });
+  }
+}
+
 export async function sendText(req, res) {
-  const { text, id } = req.body;
+  const { text, userId, firebaseId } = req.body;
+
+  // TODO: take the datas from the request body, check for user, check if fireaseId exists, and send to devices except the
+  // initial firebaseId
 
   const newText = new text_model({
     text: text,
-    user: id,
+    user: userId,
   });
   user_model
-    .findById(id)
-    .then((userExists) => {
+    .findById(userId)
+    .then(async (userExists) => {
       if (!userExists) {
         return res.status(404).send({
           message: "User does not exist",
           status: "404",
         });
       } else {
+        // const devices = userExists.devices.filter(item => item !== firebaseId);
+        const devices = userExists.devices;
+        console.log(devices);
+        const data = {
+          data: {
+            message: text,
+          },
+          registration_ids: devices,
+        };
+        const config = {
+          headers: {
+            "Content-Type": "application/json", // Example header
+            Authorization:
+              "key=AAAAvpWeRDI:APA91bGE6UO3t4FjRzyW1WC2IiYcI8IwROXifW2TYyRjtdMUn8k48qDCpiv2wHFaRSp5v_0xPCA4nTTfxtP_oQGPAe8OUKKI-7V7AaCpRI50RLNYUDQM1rlpsvynT6xsfHer4VFEmBWQ", // Example header
+          },
+        };
+        let responseData = "e";
+        await axios
+          .post("https://fcm.googleapis.com/fcm/send", data, config)
+          .then((response) => {
+            // Handle the response from the API
+            responseData = response.data;
+          })
+          .catch((error) => {
+            // Handle the error from the API
+            console.error("Error:", error);
+            
+            responseData = error.toLocaleString;
+          });
+
         newText
           .save()
           .then((result) => {
             user_model
               .findByIdAndUpdate(
-                id,
+                userId,
                 { $push: { texts: result._id } },
                 { new: true }
               )
               .then((updatedUser) => {
                 return res.status(200).send({
-                  message: "Text Uploaded successfully",
-                  user: updatedUser._id,
+                  message: "Text Sent successfully",
+                  data: responseData,
                   status: "200",
                 });
               })
@@ -292,6 +374,7 @@ export async function sendText(req, res) {
     .catch((err) => {
       return res.status(503).send({
         message: "Id number in Incorrect format ",
+        data: responseData,
         status: "503",
       });
     });
@@ -356,7 +439,14 @@ export async function getTexts(req, res) {
         return text_model.findById(textId).then((response) => {
           return {
             text: response.text,
-            time: response.createdAt.toLocaleString(undefined, { weekday: 'short',  month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true })
+            time: response.createdAt.toLocaleString(undefined, {
+              weekday: "short",
+              month: "2-digit",
+              year: "2-digit",
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: true,
+            }),
           };
         });
       });
@@ -388,27 +478,31 @@ export async function getTexts(req, res) {
 }
 
 export async function getUserDetail(req, res) {
-  const {id} = req.query;
+  const { id } = req.query;
 
-  user_model.findById(id).then((userDetails)=>{
-    if(!userDetails) return res.status(404).send({
-      message: "Cant Find User",
-      status: "404",
-    });
+  user_model
+    .findById(id)
+    .then((userDetails) => {
+      if (!userDetails)
+        return res.status(404).send({
+          message: "Cant Find User",
+          status: "404",
+        });
 
-     return res.status(202).send({
-      message: "User details Retrieved Successfully",
-      data: {
-        email: userDetails.email,
-        username: userDetails.username,
-        name: userDetails.name,
-      },
-      status: "202",
+      return res.status(202).send({
+        message: "User details Retrieved Successfully",
+        data: {
+          email: userDetails.email,
+          username: userDetails.username,
+          name: userDetails.name,
+        },
+        status: "202",
+      });
+    })
+    .catch((err) => {
+      res.status(404).send({
+        message: "User does not exist",
+        status: "404",
+      });
     });
-  }).catch((err) => {
-    res.status(404).send({
-      message: "User does not exist",
-      status: "404",
-    });
-  });
 }
