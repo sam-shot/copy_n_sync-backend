@@ -249,13 +249,16 @@ export async function updatePassword(req, res) {
 }
 
 export async function saveFirebaseId(req, res) {
-  const { userId, firebaseId, previousFirebaseId } = req.body;
+  const { userId, firebaseId, deviceName} = req.body;
 
-  if (previousFirebaseId == null) {
+
     user_model
       .findByIdAndUpdate(
         userId,
-        { $push: { devices: firebaseId } },
+        { $push: { devices: {
+          deviceName: "tecno",
+          deviceId: firebaseId
+        } } },
         { new: true }
       )
       .then((updatedUser) => {
@@ -270,29 +273,30 @@ export async function saveFirebaseId(req, res) {
           .status(404)
           .send({ message: "User not Found!", status: "404" });
       });
-  } else {
-    await user_model
-      .findOneAndUpdate(
-        { _id: userId, devices: previousFirebaseId },
-        { $set: { "devices.$[oldId]": firebaseId } },
-        { arrayFilters: [{ oldId: previousFirebaseId }] },
-        { new: true }
-      )
-      .then((updatedUser) => {
-        return res.status(200).send({
-          message: "Devices registered successfully",
-          devices: updatedUser.devices,
-          status: "200",
-        });
-      })
-      .catch((err) => {
-        return res
-          .status(404)
-          .send({ message: "Device/ User not Found!", status: "404" });
-      });
-  }
-}
 
+
+      // await user_model
+      // .findOneAndUpdate(
+      //   { _id: userId, devices: previousFirebaseId },
+      //   { $set: { "devices.$[oldId]": firebaseId } },
+      //   { arrayFilters: [{ oldId: previousFirebaseId }] },
+      //   { new: true }
+      // )
+      // .then((updatedUser) => {
+      //   return res.status(200).send({
+      //     message: "Devices registered successfully",
+      //     devices: updatedUser.devices,
+      //     status: "200",
+      //   })
+      // })
+      // .catch((err) => {
+      //   return res
+      //     .status(404)
+      //     .send({ message: "Device/ User not Found!", status: "404" });
+      // });
+  }   
+  
+    
 export async function sendText(req, res) {
   const { text, userId, firebaseId } = req.body;
 
@@ -312,8 +316,8 @@ export async function sendText(req, res) {
           status: "404",
         });
       } else {
-        // const devices = userExists.devices.filter(item => item !== firebaseId);
-        const devices = userExists.devices;
+        const devices = userExists.devices.filter(item => item !== firebaseId);
+        // const devices = userExists.devices;
         console.log(devices);
         const data = {
           data: {
@@ -324,7 +328,7 @@ export async function sendText(req, res) {
         const config = {
           headers: {
             "Content-Type": "application/json", // Example header
-            Authorization:
+            "Authorization":
               "key=AAAAvpWeRDI:APA91bGE6UO3t4FjRzyW1WC2IiYcI8IwROXifW2TYyRjtdMUn8k48qDCpiv2wHFaRSp5v_0xPCA4nTTfxtP_oQGPAe8OUKKI-7V7AaCpRI50RLNYUDQM1rlpsvynT6xsfHer4VFEmBWQ", // Example header
           },
         };
