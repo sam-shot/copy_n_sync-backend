@@ -256,7 +256,7 @@ export async function saveFirebaseId(req, res) {
       .findByIdAndUpdate(
         userId,
         { $push: { devices: {
-          deviceName: "tecno",
+          deviceName: deviceName,
           deviceId: firebaseId
         } } },
         { new: true }
@@ -300,9 +300,6 @@ export async function saveFirebaseId(req, res) {
 export async function sendText(req, res) {
   const { text, userId, firebaseId } = req.body;
 
-  // TODO: take the datas from the request body, check for user, check if fireaseId exists, and send to devices except the
-  // initial firebaseId
-
   const newText = new text_model({
     text: text,
     user: userId,
@@ -313,11 +310,11 @@ export async function sendText(req, res) {
       if (!userExists) {
         return res.status(404).send({
           message: "User does not exist",
-          status: "404",
+          status: "404", 
         });
       } else {
-        const devices = userExists.devices.filter(item => item !== firebaseId);
-        // const devices = userExists.devices;
+        const allDevices = user.devices.map(e=>e.deviceId);
+        const devices = allDevices.filter(item => item !== firebaseId);
         console.log(devices);
         const data = {
           data: {
