@@ -313,7 +313,7 @@ export async function sendText(req, res) {
           status: "404", 
         });
       } else {
-        const allDevices = user.devices.map(e=>e.deviceId);
+        const allDevices = userExists.devices.map(e=>e.deviceId);
         const devices = allDevices.filter(item => item !== firebaseId);
         console.log(devices);
         const data = {
