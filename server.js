@@ -11,6 +11,11 @@ import router from "./router/routes.js";
 const app = express();
 app.use(cors());
 
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  next();
+});
+
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
