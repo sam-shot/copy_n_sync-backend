@@ -354,7 +354,7 @@ export async function sendText(req, res) {
                 { new: true }
               )
               .then((updatedUser) => {
-                res.setHeader('Access-Control-Allow-Origin', 'chrome-extension://ohhhlcniholiaakjdlfjhkejcpmhbeli');
+                res.setHeader('Access-Control-Allow-Origin', '*');
                 return res.status(200).send({
                   message: "Text Sent successfully",
                   data: responseData,
