@@ -289,6 +289,7 @@ export async function saveFirebaseId(req, res) {
       //     status: "200",
       //   })
       // })
+  res.setHeader('Access-Control-Allow-Origin', '*');
       // .catch((err) => {
       //   return res
       //     .status(404)
@@ -324,7 +325,8 @@ export async function sendText(req, res) {
         };
         const config = {
           headers: {
-            "Content-Type": "application/json", // Example header
+            "Content-Type": "application/json",
+            'Access-Control-Allow-Origin': '*',// Example header
             "Authorization":
               "key=AAAAvpWeRDI:APA91bGE6UO3t4FjRzyW1WC2IiYcI8IwROXifW2TYyRjtdMUn8k48qDCpiv2wHFaRSp5v_0xPCA4nTTfxtP_oQGPAe8OUKKI-7V7AaCpRI50RLNYUDQM1rlpsvynT6xsfHer4VFEmBWQ", // Example header
           },
