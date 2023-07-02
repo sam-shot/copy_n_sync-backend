@@ -289,7 +289,6 @@ export async function saveFirebaseId(req, res) {
       //     status: "200",
       //   })
       // })
-  res.setHeader('Access-Control-Allow-Origin', '*');
       // .catch((err) => {
       //   return res
       //     .status(404)
@@ -355,6 +354,7 @@ export async function sendText(req, res) {
                 { new: true }
               )
               .then((updatedUser) => {
+                res.setHeader('Access-Control-Allow-Origin', 'chrome-extension://ohhhlcniholiaakjdlfjhkejcpmhbeli');
                 return res.status(200).send({
                   message: "Text Sent successfully",
                   data: responseData,
