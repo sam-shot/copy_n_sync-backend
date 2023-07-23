@@ -119,7 +119,7 @@ app.get("/", (req, res) => {
 });
 
 app.post("/upload", upload.single("file"), (req, res) => {
-  const {userId} = req.body;
+  const {userId, deviceId} = req.body;
   // const userId = "642f3ad88c7ed964295810f5";
   const storageRef = ref(storage, req.file.originalname);
   user_model
@@ -129,8 +129,8 @@ app.post("/upload", upload.single("file"), (req, res) => {
         const link = await getDownloadURL(snapshot.ref);
         const data = {
           text: link,
-
           userId: userId,
+          firebaseId: deviceId
         };
         await axios
           .post("https://copy-n-sync-backend.vercel.app/send/text", data)
