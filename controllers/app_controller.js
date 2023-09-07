@@ -1,10 +1,10 @@
+import axios from "axios";
 import bcrypt from "bcrypt";
 import text_model from "../model/text_model.js";
 import token_model from "../model/token_model.js";
 import user_model from "../model/user_model.js";
 import * as code_generator from "../utils/code_generator.js";
 import { sendMail } from "../utils/mailer.js";
-import axios from 'axios';
 
 export async function login(req, res) {
   const { email, password } = req.body;
@@ -76,8 +76,8 @@ export async function register(req, res) {
         username,
         devices: {
           deviceName: deviceName,
-          deviceId: firebaseId
-        } ,
+          deviceId: firebaseId,
+        },
       });
       user
         .save()
@@ -252,54 +252,55 @@ export async function updatePassword(req, res) {
 }
 
 export async function saveFirebaseId(req, res) {
-  const { userId, firebaseId, deviceName} = req.body;
+  const { userId, firebaseId, deviceName } = req.body;
 
-
-    user_model
-      .findByIdAndUpdate(
-        userId,
-        { $push: { devices: {
-          deviceName: deviceName,
-          deviceId: firebaseId
-        } } },
-        { new: true }
-      )
-      .then((updatedUser) => {
-        return res.status(200).send({
-          message: "Devices registered successfully",
-          devices: updatedUser.devices,
-          status: "200",
-        });
-      })
-      .catch((err) => {
-        return res
-          .status(404)
-          .send({ message: "User not Found!", status: "404" });
+  user_model
+    .findByIdAndUpdate(
+      userId,
+      {
+        $push: {
+          devices: {
+            deviceName: deviceName,
+            deviceId: firebaseId,
+          },
+        },
+      },
+      { new: true }
+    )
+    .then((updatedUser) => {
+      return res.status(200).send({
+        message: "Devices registered successfully",
+        devices: updatedUser.devices,
+        status: "200",
       });
+    })
+    .catch((err) => {
+      return res
+        .status(404)
+        .send({ message: "User not Found!", status: "404" });
+    });
 
+  // await user_model
+  // .findOneAndUpdate(
+  //   { _id: userId, devices: previousFirebaseId },
+  //   { $set: { "devices.$[oldId]": firebaseId } },
+  //   { arrayFilters: [{ oldId: previousFirebaseId }] },
+  //   { new: true }
+  // )
+  // .then((updatedUser) => {
+  //   return res.status(200).send({
+  //     message: "Devices registered successfully",
+  //     devices: updatedUser.devices,
+  //     status: "200",
+  //   })
+  // })
+  // .catch((err) => {
+  //   return res
+  //     .status(404)
+  //     .send({ message: "Device/ User not Found!", status: "404" });
+  // });
+}
 
-      // await user_model
-      // .findOneAndUpdate(
-      //   { _id: userId, devices: previousFirebaseId },
-      //   { $set: { "devices.$[oldId]": firebaseId } },
-      //   { arrayFilters: [{ oldId: previousFirebaseId }] },
-      //   { new: true }
-      // )
-      // .then((updatedUser) => {
-      //   return res.status(200).send({
-      //     message: "Devices registered successfully",
-      //     devices: updatedUser.devices,
-      //     status: "200",
-      //   })
-      // })
-      // .catch((err) => {
-      //   return res
-      //     .status(404)
-      //     .send({ message: "Device/ User not Found!", status: "404" });
-      // });
-  }   
-  
-    
 export async function sendText(req, res) {
   const { text, userId, firebaseId } = req.body;
 
@@ -313,11 +314,11 @@ export async function sendText(req, res) {
       if (!userExists) {
         return res.status(404).send({
           message: "User does not exist",
-          status: "404", 
+          status: "404",
         });
       } else {
-        const allDevices = userExists.devices.map(e=>e.deviceId);
-        const devices = allDevices.filter(item => item !== firebaseId);
+        const allDevices = userExists.devices.map((e) => e.deviceId);
+        const devices = allDevices.filter((item) => item !== firebaseId);
         console.log(devices);
         const data = {
           data: {
@@ -328,8 +329,8 @@ export async function sendText(req, res) {
         const config = {
           headers: {
             "Content-Type": "application/json",
-            'Access-Control-Allow-Origin': '*',// Example header
-            "Authorization":
+            "Access-Control-Allow-Origin": "*", // Example header
+            Authorization:
               "key=AAAAvpWeRDI:APA91bGE6UO3t4FjRzyW1WC2IiYcI8IwROXifW2TYyRjtdMUn8k48qDCpiv2wHFaRSp5v_0xPCA4nTTfxtP_oQGPAe8OUKKI-7V7AaCpRI50RLNYUDQM1rlpsvynT6xsfHer4VFEmBWQ", // Example header
           },
         };
@@ -343,7 +344,7 @@ export async function sendText(req, res) {
           .catch((error) => {
             // Handle the error from the API
             console.error("Error:", error);
-            
+
             responseData = error.toLocaleString;
           });
 
@@ -357,7 +358,7 @@ export async function sendText(req, res) {
                 { new: true }
               )
               .then((updatedUser) => {
-                res.setHeader('Access-Control-Allow-Origin', '*');
+                res.setHeader("Access-Control-Allow-Origin", "*");
                 return res.status(200).send({
                   message: "Text Sent successfully",
                   data: responseData,
@@ -388,21 +389,17 @@ export async function sendText(req, res) {
 export async function sendHistory(req, res) {
   const { text, userId, firebaseId } = req.body;
 
-  const newText = new text_model({
-    text: text,
-    user: userId,
-  });
   user_model
     .findById(userId)
     .then(async (userExists) => {
       if (!userExists) {
         return res.status(404).send({
           message: "User does not exist",
-          status: "404", 
+          status: "404",
         });
       } else {
-        const allDevices = userExists.devices.map(e=>e.deviceId);
-        const devices = allDevices.filter(item => item !== firebaseId);
+        const allDevices = userExists.devices.map((e) => e.deviceId);
+        const devices = allDevices.filter((item) => item !== firebaseId);
         console.log(devices);
         const data = {
           data: {
@@ -413,8 +410,8 @@ export async function sendHistory(req, res) {
         const config = {
           headers: {
             "Content-Type": "application/json",
-            'Access-Control-Allow-Origin': '*',// Example header
-            "Authorization":
+            "Access-Control-Allow-Origin": "*", // Example header
+            Authorization:
               "key=AAAAvpWeRDI:APA91bGE6UO3t4FjRzyW1WC2IiYcI8IwROXifW2TYyRjtdMUn8k48qDCpiv2wHFaRSp5v_0xPCA4nTTfxtP_oQGPAe8OUKKI-7V7AaCpRI50RLNYUDQM1rlpsvynT6xsfHer4VFEmBWQ", // Example header
           },
         };
@@ -428,11 +425,9 @@ export async function sendHistory(req, res) {
           .catch((error) => {
             // Handle the error from the API
             console.error("Error:", error);
-            
+
             responseData = error.toLocaleString;
           });
-
-        
       }
     })
     .catch((err) => {
@@ -569,4 +564,71 @@ export async function getUserDetail(req, res) {
         status: "404",
       });
     });
+}
+export async function getDevices(req, res) {
+  const { id } = req.query;
+
+  user_model
+    .findById(id)
+    .then((userDetails) => {
+      if (!userDetails)
+        return res.status(404).send({
+          message: "Cant Find User",
+          status: "404",
+        });
+
+      return res.status(202).send({
+        message: "User details Retrieved Successfully",
+        data: {
+          devices: userDetails.devices,
+        },
+        status: "202",
+      });
+    })
+    .catch((err) => {
+      res.status(404).send({
+        message: "User does not exist",
+        status: "404",
+      });
+    });
+}
+export async function removeDevice(req, res) {
+  const { userId, deviceId } = req.body;
+
+  try {
+    try {
+      user = await user_model.findById(userId);
+    } catch (error) {
+      return res.status(500).json({ message: "Invalid User Id", status: "404" });
+    }
+  
+    if (!user) {
+      return res.status(404).json({ message: "User not found", status: "404" });
+    }
+  
+    const deviceIndex = user.devices.findIndex(
+      (device) => device.deviceId === deviceId
+    );
+  
+    if (deviceIndex === -1) {
+      return res
+        .status(404)
+        .send({ message: "Device not found for this user", status: "404" });
+    }
+  
+    user.devices.splice(deviceIndex, 1);
+    await user.save();
+  
+    return res.status(202).send({
+      message: "User Removed Successfully",
+      data: {
+        devices: user.devices,
+      },
+      status: "200",
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server error", status: "500" });
+  }
+
 }
