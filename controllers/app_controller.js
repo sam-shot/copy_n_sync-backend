@@ -47,7 +47,7 @@ export async function login(req, res) {
 }
 
 export async function register(req, res) {
-  const { name, email, password, username, firebaseId } = req.body;
+  const { name, email, password, username, firebaseId, deviceName } = req.body;
 
   if (!name) return res.status(403).send({ message: "Please input a name" });
   if (!email) return res.status(403).send({ message: "Please input an email" });
@@ -74,7 +74,10 @@ export async function register(req, res) {
         email,
         password: hashPass,
         username,
-        devices: [firebaseId],
+        devices: {
+          deviceName: deviceName,
+          deviceId: firebaseId
+        } ,
       });
       user
         .save()
@@ -372,6 +375,64 @@ export async function sendText(req, res) {
               .status(503)
               .send({ message: "An Error Occured", status: "503" });
           });
+      }
+    })
+    .catch((err) => {
+      return res.status(503).send({
+        message: "Id number in Incorrect format ",
+        data: responseData,
+        status: "503",
+      });
+    });
+}
+export async function sendHistory(req, res) {
+  const { text, userId, firebaseId } = req.body;
+
+  const newText = new text_model({
+    text: text,
+    user: userId,
+  });
+  user_model
+    .findById(userId)
+    .then(async (userExists) => {
+      if (!userExists) {
+        return res.status(404).send({
+          message: "User does not exist",
+          status: "404", 
+        });
+      } else {
+        const allDevices = userExists.devices.map(e=>e.deviceId);
+        const devices = allDevices.filter(item => item !== firebaseId);
+        console.log(devices);
+        const data = {
+          data: {
+            message: text,
+          },
+          registration_ids: devices,
+        };
+        const config = {
+          headers: {
+            "Content-Type": "application/json",
+            'Access-Control-Allow-Origin': '*',// Example header
+            "Authorization":
+              "key=AAAAvpWeRDI:APA91bGE6UO3t4FjRzyW1WC2IiYcI8IwROXifW2TYyRjtdMUn8k48qDCpiv2wHFaRSp5v_0xPCA4nTTfxtP_oQGPAe8OUKKI-7V7AaCpRI50RLNYUDQM1rlpsvynT6xsfHer4VFEmBWQ", // Example header
+          },
+        };
+        let responseData = "e";
+        await axios
+          .post("https://fcm.googleapis.com/fcm/send", data, config)
+          .then((response) => {
+            // Handle the response from the API
+            responseData = response.data;
+          })
+          .catch((error) => {
+            // Handle the error from the API
+            console.error("Error:", error);
+            
+            responseData = error.toLocaleString;
+          });
+
+        
       }
     })
     .catch((err) => {
