@@ -12,6 +12,7 @@ router.route('/auth/forgotpassword/updatePassword').post(controlller.updatePassw
 
 
 router.route('/user/updateDeviceId').post(controlller.saveFirebaseId);
+router.route('/user/devices').post(controlller.getDevices);
 router.route('/user/removeDevice').post(controlller.removeDevice);
 
 router.route('/send/text').post(controlller.sendText);
