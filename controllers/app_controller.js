@@ -597,9 +597,9 @@ export async function removeDevice(req, res) {
 
   try {
     try {
-      user = await user_model.findById(userId);
+      const user = await user_model.findById(userId);
     } catch (error) {
-      return res.status(500).json({ message: "Invalid User Id", status: "404" });
+      return res.status(500).json({ message: error, status: "404" });
     }
   
     if (!user) {
