@@ -596,8 +596,9 @@ export async function removeDevice(req, res) {
   const { userId, deviceId } = req.body;
 
   try {
+    let user;
     try {
-      const user = await user_model.findById(userId);
+      user = await user_model.findById(userId);
     } catch (error) {
       return res.status(500).json({ message: error, status: "404" });
     }
@@ -620,7 +621,7 @@ export async function removeDevice(req, res) {
     await user.save();
   
     return res.status(202).send({
-      message: "User Removed Successfully",
+      message: "Device Removed Successfully",
       data: {
         devices: user.devices,
       },
