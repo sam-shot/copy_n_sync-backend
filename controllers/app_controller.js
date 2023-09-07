@@ -566,10 +566,10 @@ export async function getUserDetail(req, res) {
     });
 }
 export async function getDevices(req, res) {
-  const { id } = req.query;
+  const { userId } = req.query;
 
   user_model
-    .findById(id)
+    .findById(userId)
     .then((userDetails) => {
       if (!userDetails)
         return res.status(404).send({
