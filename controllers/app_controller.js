@@ -421,6 +421,10 @@ export async function sendHistory(req, res) {
           .then((response) => {
             // Handle the response from the API
             responseData = response.data;
+            return res.status(404).send({
+              message: "Sucessful",
+              status: "200",
+            });
           })
           .catch((error) => {
             // Handle the error from the API
@@ -428,6 +432,8 @@ export async function sendHistory(req, res) {
 
             responseData = error.toLocaleString;
           });
+
+
       }
     })
     .catch((err) => {
