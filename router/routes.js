@@ -14,6 +14,7 @@ router.route('/auth/forgotpassword/updatePassword').post(controlller.updatePassw
 router.route('/user/updateDeviceId').post(controlller.saveFirebaseId);
 
 router.route('/send/text').post(controlller.sendText);
+router.route('/send/text/history').post(controlller.sendHistory);
 
 
 
