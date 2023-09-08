@@ -325,7 +325,7 @@ export async function sendText(req, res) {
         const data = {
           data: {
             message: text,
-            type: domainRegex.test(text) ? "file" : "other"
+            type: domainRegex.test(text) ? "file" : "file"
           },
           registration_ids: devices,
         };
