@@ -320,9 +320,12 @@ export async function sendText(req, res) {
         const allDevices = userExists.devices.map((e) => e.deviceId);
         const devices = allDevices.filter((item) => item !== firebaseId);
         console.log(devices);
+
+        const domainRegex = /^https:\/\/firebasestorage\.googleapis\.com\/v0\/b\/copy-n-sync\.appspot\.com$/;
         const data = {
           data: {
             message: text,
+            type: domainRegex.test(text) ? "file" : "other"
           },
           registration_ids: devices,
         };
@@ -401,9 +404,12 @@ export async function sendHistory(req, res) {
         const allDevices = userExists.devices.map((e) => e.deviceId);
         const devices = allDevices.filter((item) => item !== firebaseId);
         console.log(devices);
+        const domainRegex = /^https:\/\/firebasestorage\.googleapis\.com\/v0\/b\/copy-n-sync\.appspot\.com$/;
+
         const data = {
           data: {
             message: text,
+            type: domainRegex.test(text) ? "file" : "other"
           },
           registration_ids: devices,
         };
