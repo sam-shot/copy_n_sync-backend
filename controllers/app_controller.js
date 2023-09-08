@@ -321,11 +321,11 @@ export async function sendText(req, res) {
         const devices = allDevices.filter((item) => item !== firebaseId);
         console.log(devices);
 
-        const domainRegex = /^https:\/\/firebasestorage\.googleapis\.com\/v0\/b\/copy-n-sync\.appspot\.com$/;
+        const domainRegex = /^https:\/\/firebasestorage\.googleapis\.com\/v\d\/b\/[^\/]+\/o\/[^?]+\?alt=media&token=[\w-]+$/;
         const data = {
           data: {
             message: text,
-            type: domainRegex.test(text) ? "file" : "file"
+            type: domainRegex.test(text) ? "file" : "others"
           },
           registration_ids: devices,
         };
