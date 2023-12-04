@@ -48,66 +48,7 @@ const storage = getStorage(firebaseApp, "gs://copy-n-sync.appspot.com/");
 
 const connectedUsers = {};
 
-io.on("connection", (socket) => {
-  const userId = socket.handshake.query.userId;
-  console.log(`User`, socket.id, ` connected with id: ${userId}`);
 
-  if (!connectedUsers[userId]) {
-    connectedUsers[userId] = [socket.id]; // create a new array for this user's sockets
-  } else {
-    connectedUsers[userId].push(socket.id); // add the socket to the existing array for this user
-  }
-  console.log(connectedUsers);
-
-  socket.on("disconnect", () => {
-    const index = connectedUsers[userId].indexOf(socket.id);
-    if (index !== -1) {
-      connectedUsers[userId].splice(index, 1);
-    }
-    console.log(socket.id, "user disconnected");
-    console.log(connectedUsers);
-  });
-
-  socket.on("send", (data) => {
-    // Do something with the data, like broadcasting it to other connected clients
-    console.log(data);
-    const userId = data.userId; // Replace with the user ID you want to send the message to
-    console.log(userId);
-    const socketId = connectedUsers[userId];
-    console.log(socketId);
-    const otherClients = connectedUsers[userId].filter(
-      (element) => element !== socket.id
-    );
-    console.log(otherClients);
-
-    if (connectedUsers[userId].length < 2) {
-      io.to(connectedUsers[userId]).emit(
-        "error",
-        "You need to have at least 2 devices for Text Syncing"
-      );
-
-      console.log(`User ${userId} does not have at least 2 clients connected`);
-    } else {
-      io.to(otherClients).emit("get", data.message);
-      if (!data.fromHistory) {
-        const newText = new text_model({
-          text: data.message,
-          user: userId,
-        });
-        newText.save().then(async (result) => {
-          console.log("user to update");
-          await user_model.findByIdAndUpdate(
-            userId,
-            { $push: { texts: result._id } },
-            { new: true }
-          );
-        });
-      }
-    }
-    console.log(data.userId);
-  });
-});
-instrument(io, { auth: false });
 
 app.use(express.json());
 const port = 3000;

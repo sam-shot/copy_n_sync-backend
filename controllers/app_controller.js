@@ -598,7 +598,7 @@ export async function joinWaitlist(req, res) {
         email: email
       });
       user.save();
-
+      console.log(user);
       return res.status(200).send({
         message: "User added to waitlist",
         status: "200",
