@@ -586,7 +586,7 @@ export async function joinWaitlist(req, res) {
 
   try {
     waitlist_model
-    .find(email)
+    .findOne({ email })
     .then((userDetails) => {
         return res.status(202).send({
           message: "User already on waitlist",
