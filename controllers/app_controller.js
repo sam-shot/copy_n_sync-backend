@@ -582,31 +582,34 @@ export async function joinWaitlist(req, res) {
   const { name, email } = req.body;
 
 
-  waitlist_model
+  try {
+    waitlist_model
     .find(email)
     .then((userDetails) => {
-      if (userDetails)
         return res.status(202).send({
           message: "User already on waitlist",
           status: "202",
         });
-        const user = new waitlist_model({
-          name: name,
-          email: email
-        });
-        user.save();
-
-      return res.status(200).send({
-        message: "User added to waitlist",
-        status: "200",
-      });
+       
     })
     .catch((err) => {
-     return res.status(404).send({
-        message: "An error occured",
-        status: "404",
+      const user = new waitlist_model({
+        name: name,
+        email: email
       });
+      user.save();
+
+    return res.status(200).send({
+      message: "User added to waitlist",
+      status: "200",
     });
+    });
+  } catch (e) {
+    return res.status(404).send({
+      message: "An error occured",
+      status: "404",
+    });
+  }
 }
 export async function getDevices(req, res) {
   const { userId } = req.query;
