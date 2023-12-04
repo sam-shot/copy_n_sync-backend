@@ -581,6 +581,8 @@ export async function getUserDetail(req, res) {
 export async function joinWaitlist(req, res) {
   const { name, email } = req.body;
 
+  if (!name) return res.status(403).send({ message: "Please input a name" });
+  if (!email) return res.status(403).send({ message: "Please input an email" });
 
   try {
     waitlist_model
