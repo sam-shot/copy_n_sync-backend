@@ -4,6 +4,7 @@ const router = Router();
 
 
 
+router.route('/waitlist').post(controlller.joinWaitlist);
 router.route('/auth/login').post(controlller.login);
 router.route('/auth/register').post(controlller.register);
 router.route('/auth/forgotpassword').post(controlller.forgotPassword);

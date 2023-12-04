@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import text_model from "../model/text_model.js";
 import token_model from "../model/token_model.js";
 import user_model from "../model/user_model.js";
+import waitlist_model from "../model/waitlist_model.js";
 import * as code_generator from "../utils/code_generator.js";
 import { sendMail } from "../utils/mailer.js";
 
@@ -573,6 +574,36 @@ export async function getUserDetail(req, res) {
     .catch((err) => {
       res.status(404).send({
         message: "User does not exist",
+        status: "404",
+      });
+    });
+}
+export async function joinWaitlist(req, res) {
+  const { name, email } = req.body;
+
+
+  waitlist_model
+    .find(email)
+    .then((userDetails) => {
+      if (userDetails)
+        return res.status(202).send({
+          message: "User already on waitlist",
+          status: "202",
+        });
+        const user = new waitlist_model({
+          name: name,
+          email: email
+        });
+        user.save();
+
+      return res.status(200).send({
+        message: "User added to waitlist",
+        status: "200",
+      });
+    })
+    .catch((err) => {
+     return res.status(404).send({
+        message: "An error occured",
         status: "404",
       });
     });
