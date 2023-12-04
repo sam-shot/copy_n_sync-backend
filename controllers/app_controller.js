@@ -578,6 +578,14 @@ export async function getUserDetail(req, res) {
       });
     });
 }
+
+export async function waitlistAmount(req, res){
+ const data = await waitlist_model.find();
+ return res.status(202).send({
+  total_users: data.length,
+  data: data,
+});
+}
 export async function joinWaitlist(req, res) {
   const { name, email } = req.body;
 
