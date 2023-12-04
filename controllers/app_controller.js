@@ -584,35 +584,34 @@ export async function joinWaitlist(req, res) {
   if (!name) return res.status(403).send({ message: "Please input a name" });
   if (!email) return res.status(403).send({ message: "Please input an email" });
 
-  try {
-    waitlist_model
+  waitlist_model
     .findOne({ email })
     .then((userDetails) => {
+      if (userDetails)
         return res.status(202).send({
           message: "User already on waitlist",
           status: "202",
         });
-       
-    })
-    .catch((err) => {
+
       const user = new waitlist_model({
         name: name,
         email: email
       });
       user.save();
 
-    return res.status(200).send({
-      message: "User added to waitlist",
-      status: "200",
+      return res.status(200).send({
+        message: "User added to waitlist",
+        status: "200",
+      });
+    })
+    .catch((err) => {
+      return res.status(404).send({
+        message: "An error occured",
+        status: "404",
+      });
     });
-    });
-  } catch (e) {
-    return res.status(404).send({
-      message: "An error occured",
-      status: "404",
-    });
-  }
 }
+
 export async function getDevices(req, res) {
   const { userId } = req.query;
 
@@ -650,24 +649,24 @@ export async function removeDevice(req, res) {
     } catch (error) {
       return res.status(500).json({ message: error, status: "404" });
     }
-  
+
     if (!user) {
       return res.status(404).json({ message: "User not found", status: "404" });
     }
-  
+
     const deviceIndex = user.devices.findIndex(
       (device) => device.deviceId === deviceId
     );
-  
+
     if (deviceIndex === -1) {
       return res
         .status(404)
         .send({ message: "Device not found for this user", status: "404" });
     }
-  
+
     user.devices.splice(deviceIndex, 1);
     await user.save();
-  
+
     return res.status(202).send({
       message: "Device Removed Successfully",
       data: {
