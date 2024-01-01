@@ -61,7 +61,6 @@ app.get("/", (req, res) => {
 
 app.post("/upload", upload.single("file"), (req, res) => {
   const {userId, deviceId} = req.body;
-  // const userId = "642f3ad88c7ed964295810f5";
   const storageRef = ref(storage, req.file.originalname);
   user_model
     .findById(userId)
@@ -108,6 +107,3 @@ connect()
     console.log("Invalid DB connection", error);
   });
 
-// app.listen(port, function() {
-//     console.log('Server listening at port', port);
-//   });
